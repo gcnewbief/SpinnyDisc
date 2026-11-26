@@ -1,0 +1,76 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="SpinnyDisc.App"
+             xmlns:local="using:SpinnyDisc"
+             RequestedThemeVariant="Dark">
+
+    <Application.DataTemplates>
+        <local:ViewLocator />
+    </Application.DataTemplates>
+
+    <Application.Styles>
+        <Fluent2Theme />
+    </Application.Styles>
+
+    <!-- VoltCheck-style dark-green palette, matching the other bench apps -->
+    <Application.Resources>
+        <Color x:Key="SdBg">#0a0e0a</Color>
+        <Color x:Key="SdPanel">#101510</Color>
+        <Color x:Key="SdPanelAlt">#0c110c</Color>
+        <Color x:Key="SdBorder">#1d2b1d</Color>
+        <Color x:Key="SdGreen">#00e676</Color>
+        <Color x:Key="SdGreenDim">#1b5e20</Color>
+        <Color x:Key="SdTeal">#69f0ae</Color>
+        <Color x:Key="SdText">#d9ffe4</Color>
+        <Color x:Key="SdTextDim">#6f8f76</Color>
+        <Color x:Key="SdOrange">#ffab40</Color>
+        <Color x:Key="SdRed">#ff5252</Color>
+
+        <SolidColorBrush x:Key="SdBgBrush" Color="{StaticResource SdBg}"/>
+        <SolidColorBrush x:Key="SdPanelBrush" Color="{StaticResource SdPanel}"/>
+        <SolidColorBrush x:Key="SdPanelAltBrush" Color="{StaticResource SdPanelAlt}"/>
+        <SolidColorBrush x:Key="SdBorderBrush" Color="{StaticResource SdBorder}"/>
+        <SolidColorBrush x:Key="SdGreenBrush" Color="{StaticResource SdGreen}"/>
+        <SolidColorBrush x:Key="SdGreenDimBrush" Color="{StaticResource SdGreenDim}"/>
+        <SolidColorBrush x:Key="SdTealBrush" Color="{StaticResource SdTeal}"/>
+        <SolidColorBrush x:Key="SdTextBrush" Color="{StaticResource SdText}"/>
+        <SolidColorBrush x:Key="SdTextDimBrush" Color="{StaticResource SdTextDim}"/>
+        <SolidColorBrush x:Key="SdOrangeBrush" Color="{StaticResource SdOrange}"/>
+        <SolidColorBrush x:Key="SdRedBrush" Color="{StaticResource SdRed}"/>
+
+        <!-- drive Fluent2's accent to our green -->
+        <Color x:Key="SystemAccentColor">#00e676</Color>
+        <Color x:Key="SystemAccentColorDark1">#00c853</Color>
+        <Color x:Key="SystemAccentColorDark2">#1b5e20</Color>
+        <Color x:Key="SystemAccentColorLight1">#69f0ae</Color>
+    </Application.Resources>
+
+    <Application.Styles>
+        <!-- inputs on dark panels -->
+        <Style Selector="TextBox, NumericUpDown, ComboBox">
+            <Setter Property="Background" Value="{StaticResource SdPanelAltBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource SdTextBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource SdBorderBrush}"/>
+            <Setter Property="CornerRadius" Value="6"/>
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="Background" Value="{StaticResource SdBorderBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource SdTextBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource SdGreenDimBrush}"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="14,6"/>
+        </Style>
+        <Style Selector="Button:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource SdGreenDimBrush}"/>
+        </Style>
+        <Style Selector="CheckBox">
+            <Setter Property="Foreground" Value="{StaticResource SdTextBrush}"/>
+        </Style>
+        <Style Selector="ProgressBar /template/ Border#PART_Indicator">
+            <Setter Property="Background" Value="{StaticResource SdGreenBrush}"/>
+        </Style>
+        <Style Selector="ProgressBar /template/ Border#PART_Track">
+            <Setter Property="Background" Value="{StaticResource SdPanelAltBrush}"/>
+        </Style>
+    </Application.Styles>
+</Application>

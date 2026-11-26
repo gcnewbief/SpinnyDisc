@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SpinnyDisc.Cli/SpinnyDisc.Cli.csproj" />
+    <Project Path="src/SpinnyDisc.Core/SpinnyDisc.Core.csproj" />
+    <Project Path="src/SpinnyDisc/SpinnyDisc.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SpinnyDisc.Core.Tests/SpinnyDisc.Core.Tests.csproj" />
+  </Folder>
+</Solution>

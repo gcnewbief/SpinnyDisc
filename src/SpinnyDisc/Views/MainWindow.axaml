@@ -1,0 +1,165 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SpinnyDisc.ViewModels"
+        xmlns:devices="using:SpinnyDisc.Core.Devices"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="920" d:DesignHeight="640"
+        x:Class="SpinnyDisc.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="SpinnyDisc — SSD reliability triage"
+        Icon="avares://SpinnyDisc/Assets/SpinnyDisc.ico"
+        Width="960" Height="680" MinWidth="800" MinHeight="560"
+        Background="{StaticResource SdBgBrush}"
+        Foreground="{StaticResource SdTextBrush}"
+        FontSize="14">
+
+  <Design.DataContext>
+    <vm:MainViewModel />
+  </Design.DataContext>
+
+  <Window.Styles>
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="{StaticResource SdPanelBrush}"/>
+      <Setter Property="BorderBrush" Value="{StaticResource SdBorderBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Padding" Value="12,10"/>
+      <Setter Property="Margin" Value="0,0,0,10"/>
+    </Style>
+    <Style Selector="TextBlock.card-title">
+      <Setter Property="Foreground" Value="{StaticResource SdTextDimBrush}"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Margin" Value="0,0,0,6"/>
+    </Style>
+    <Style Selector="TextBlock.verdict">
+      <Setter Property="FontSize" Value="20"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
+    <Style Selector="TextBlock.verdict.pass"><Setter Property="Foreground" Value="{StaticResource SdGreenBrush}"/></Style>
+    <Style Selector="TextBlock.verdict.degraded"><Setter Property="Foreground" Value="{StaticResource SdOrangeBrush}"/></Style>
+    <Style Selector="TextBlock.verdict.fail"><Setter Property="Foreground" Value="{StaticResource SdRedBrush}"/></Style>
+    <Style Selector="TextBlock.verdict.inconclusive"><Setter Property="Foreground" Value="{StaticResource SdTextDimBrush}"/></Style>
+    <Style Selector="TextBlock.hint"><Setter Property="Foreground" Value="{StaticResource SdTextDimBrush}"/><Setter Property="FontSize" Value="11"/></Style>
+    <Style Selector="TextBlock.warn"><Setter Property="Foreground" Value="{StaticResource SdOrangeBrush}"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
+    <Style Selector="Button.accent">
+      <Setter Property="Background" Value="{StaticResource SdGreenBrush}"/>
+      <Setter Property="Foreground" Value="#00240f"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
+  </Window.Styles>
+
+  <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto" Margin="14">
+
+    <!-- header -->
+    <DockPanel Grid.Row="0" Margin="0,0,0,12">
+      <Image Source="avares://SpinnyDisc/Assets/mascot-64.png" Width="40" Height="40"
+             VerticalAlignment="Center" Margin="0,0,10,0"/>
+      <TextBlock Text="SPINNY" Foreground="{StaticResource SdGreenBrush}" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+      <TextBlock Text="DISC" Foreground="{StaticResource SdTextBrush}" FontSize="22" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+      <TextBlock Text="ssd reliability triage" Classes="hint" VerticalAlignment="Center"/>
+      <TextBlock Classes="verdict {Binding VerdictCss}" Text="{Binding VerdictText}"
+                 DockPanel.Dock="Right" VerticalAlignment="Center"/>
+    </DockPanel>
+
+    <!-- drive card -->
+    <Border Grid.Row="1" Classes="card">
+      <StackPanel>
+        <TextBlock Text="DRIVE" Classes="card-title"/>
+        <Grid ColumnDefinitions="*,Auto">
+          <ComboBox ItemsSource="{Binding Disks}" SelectedItem="{Binding SelectedDisk}"
+                    HorizontalAlignment="Stretch" VerticalAlignment="Center">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="devices:DiskDescriptor">
+                <TextBlock Text="{Binding DisplayName}"/>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Grid.Column="1" Content="refresh" Command="{Binding RefreshCommand}" Margin="8,0,0,0"/>
+        </Grid>
+        <TextBlock Text="{Binding SelectedDiskDetails}" Classes="hint" TextWrapping="Wrap" Margin="0,6,0,0"/>
+        <TextBlock Classes="warn" IsVisible="{Binding SelectedDiskIsSystem}" Margin="0,4,0,0"
+                   Text="! this disk hosts the system volume — writes need 'allow system disk'"/>
+      </StackPanel>
+    </Border>
+
+    <!-- options card -->
+    <Border Grid.Row="2" Classes="card">
+      <StackPanel>
+        <TextBlock Text="TEST OPTIONS" Classes="card-title"/>
+        <WrapPanel Orientation="Horizontal">
+          <TextBlock Text="intensity" VerticalAlignment="Center" Foreground="{StaticResource SdTextDimBrush}" Margin="0,0,4,0"
+                     ToolTip.Tip="gentle: ~25% surface, quick triage · normal: full sweep · heavy: full sweep + sustained random pressure + long idle-wake cycles"/>
+          <ComboBox ItemsSource="{Binding Intensities}" SelectedItem="{Binding Intensity}" Width="110" Margin="0,0,16,0"
+                    VerticalAlignment="Center" ToolTip.Tip="gentle: ~25% surface, quick triage · normal: full sweep · heavy: full sweep + sustained random pressure + long idle-wake cycles"/>
+          <CheckBox Content="destructive write+verify" IsChecked="{Binding AllowWrites}" Margin="0,0,16,0" VerticalAlignment="Center"
+                    ToolTip.Tip="DESTRUCTIVE: writes a pattern to the whole disk and reads it back. Destroys all data. Needed to catch silent corruption."/>
+          <CheckBox Content="allow system disk (override)" IsChecked="{Binding AllowSystemDisk}"
+                    IsEnabled="{Binding AllowWrites}" VerticalAlignment="Center"
+                    ToolTip.Tip="Permits write+verify on the disk hosting the boot volume. Dangerous — for Windows To Go test drives only."/>
+        </WrapPanel>
+        <WrapPanel Orientation="Horizontal" Margin="0,8,0,0">
+          <TextBlock Text="hang ms" VerticalAlignment="Center" Foreground="{StaticResource SdTextDimBrush}" Margin="0,0,4,0"
+                     ToolTip.Tip="An I/O exceeding this is declared HUNG — logged, drive is reset, test continues."/>
+          <NumericUpDown Value="{Binding HangTimeoutMs}" Minimum="1000" Maximum="300000" Increment="1000" ShowButtonSpinner="False" Width="100" Margin="0,0,12,0"
+                         ToolTip.Tip="Hang timeout (ms): I/O taking longer triggers a device reset."/>
+          <TextBlock Text="stall ms" VerticalAlignment="Center" Foreground="{StaticResource SdTextDimBrush}" Margin="0,0,4,0"
+                     ToolTip.Tip="An I/O slower than this but completing is logged as a STALL — the 'OS hangs' symptom."/>
+          <NumericUpDown Value="{Binding StallThresholdMs}" Minimum="100" Maximum="60000" Increment="500" ShowButtonSpinner="False" Width="90" Margin="0,0,12,0"
+                         ToolTip.Tip="Stall threshold (ms): slow-but-completing I/O is logged at this level."/>
+          <TextBlock Text="max resets" VerticalAlignment="Center" Foreground="{StaticResource SdTextDimBrush}" Margin="0,0,4,0"
+                     ToolTip.Tip="Test aborts with FAILED after this many device resets — a drive needing more is condemned."/>
+          <NumericUpDown Value="{Binding MaxResets}" Minimum="0" Maximum="200" Increment="1" ShowButtonSpinner="False" Width="70" Margin="0,0,12,0"
+                         ToolTip.Tip="Max device resets before the drive is declared FAILED."/>
+          <TextBlock Text="random ops" VerticalAlignment="Center" Foreground="{StaticResource SdTextDimBrush}" Margin="0,0,4,0"
+                     ToolTip.Tip="Random-read ops in the random phase — stresses firmware lookups and provokes garbage collection."/>
+          <NumericUpDown Value="{Binding RandomReadOps}" Minimum="0" Maximum="1000000" Increment="512" ShowButtonSpinner="False" Width="100"
+                         ToolTip.Tip="Number of random 4 KiB reads in the random phase."/>
+        </WrapPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- run card -->
+    <Border Grid.Row="3" Classes="card">
+      <StackPanel>
+        <TextBlock Text="RUN" Classes="card-title"/>
+        <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+          <Button Grid.Column="0" Classes="accent" Content="START TEST" Command="{Binding StartCommand}" Width="130"/>
+          <Button Grid.Column="1" Content="cancel" Command="{Binding CancelCommand}" Margin="8,0,0,0" IsEnabled="{Binding IsRunning}"/>
+          <ProgressBar Grid.Column="2" Value="{Binding ProgressFraction}" Minimum="0" Maximum="1" Height="32"
+                       VerticalAlignment="Center" Margin="16,0,10,0"/>
+          <TextBlock Grid.Column="3" Text="{Binding ElapsedText}" VerticalAlignment="Center"
+                     FontFamily="Consolas,Menlo,monospace" Foreground="{StaticResource SdTextDimBrush}"
+                     Margin="0,0,10,0" MinWidth="56" TextAlignment="Right"
+                     ToolTip.Tip="elapsed test time"/>
+          <TextBlock Grid.Column="4" Text="{Binding StatusText}" VerticalAlignment="Center" MinWidth="240"
+                     TextAlignment="Right" Foreground="{StaticResource SdTealBrush}"/>
+        </Grid>
+      </StackPanel>
+    </Border>
+
+    <!-- log card -->
+    <Border Grid.Row="4" Classes="card" Margin="0,0,0,0">
+      <StackPanel>
+        <TextBlock Text="EVENT LOG" Classes="card-title"/>
+        <Border Background="{StaticResource SdPanelAltBrush}" CornerRadius="4" MinHeight="200" ClipToBounds="True">
+          <ListBox x:Name="LogBox" ItemsSource="{Binding LogLines}" FontFamily="Consolas,Menlo,monospace"
+                   FontSize="12" Margin="8" Foreground="{StaticResource SdTextBrush}"
+                   Background="Transparent" BorderThickness="0"
+                   ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                   ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+        </Border>
+      </StackPanel>
+    </Border>
+
+    <!-- footer -->
+    <DockPanel Grid.Row="5" Margin="0,10,0,0">
+      <Button Content="open report" Command="{Binding OpenReportCommand}" DockPanel.Dock="Right"
+              IsEnabled="{Binding HasReport}"/>
+      <Button Content="open output dir" Command="{Binding OpenOutputDirCommand}" DockPanel.Dock="Right" Margin="0,0,8,0"/>
+      <TextBlock Text="{Binding OutputDir}" Classes="hint" VerticalAlignment="Center"
+                 TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
+    </DockPanel>
+  </Grid>
+</Window>

@@ -1,0 +1,11 @@
+bin/
+obj/
+publish/
+reports/
+.elev/job.*
+.elev/stop
+list-out.txt
+hello.txt
+test.cmd
+*.user
+.vs/
