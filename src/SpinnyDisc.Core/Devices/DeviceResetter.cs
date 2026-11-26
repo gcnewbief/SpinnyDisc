@@ -65,10 +65,18 @@ public static class DeviceResetter
             target = disk.DevInst;
 
         if (target == 0)
-            return new ResetResult(false, ResetMethod.None, "no devnode to restart");
+            // Nothing to restart — the wedged device already dropped off the bus.
+            return new ResetResult(true, ResetMethod.DevnodeRestart,
+                "devnode gone — device self-ejected, waiting for re-enumeration");
 
         if (!Pnp.RestartDevNode(target, out string err))
+        {
+            // 0xE000020B (no such devinst): devnode vanished mid-reset — same self-eject case.
+            if (err.Contains("0xE000020B", StringComparison.OrdinalIgnoreCase))
+                return new ResetResult(true, ResetMethod.DevnodeRestart,
+                    "devnode vanished mid-reset — device self-ejected");
             return new ResetResult(false, ResetMethod.DevnodeRestart, err);
+        }
 
         return new ResetResult(true, ResetMethod.DevnodeRestart, "devnode disable/enable issued");
     }
@@ -82,13 +90,23 @@ public static class DeviceResetter
         {
             ct.ThrowIfCancellationRequested();
             await Task.Delay(500, ct).ConfigureAwait(false);
-            foreach (var d in DiskEnumerator.Enumerate())
+
+            // A wedged drive can hang enumeration itself — bound each probe and
+            // abandon it on timeout rather than stall the whole wait loop.
+            var probe = Task.Run(() => DiskEnumerator.Enumerate(), ct);
+            if (await Task.WhenAny(probe, Task.Delay(10_000, ct)) != probe)
+                continue;
+            List<DiskDescriptor> disks;
+            try { disks = probe.Result; }
+            catch { continue; }
+
+            foreach (var d in disks)
             {
                 if (d.IdentityKey == original.IdentityKey)
                     return d;
             }
             // Serial-less bridges: relax the match — same model+size+bus.
-            foreach (var d in DiskEnumerator.Enumerate())
+            foreach (var d in disks)
             {
                 if (d.Model == original.Model && d.SizeBytes == original.SizeBytes
                     && d.BusType == original.BusType && d.Serial == original.Serial)
