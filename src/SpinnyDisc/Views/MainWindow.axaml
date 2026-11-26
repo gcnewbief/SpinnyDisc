@@ -58,9 +58,11 @@
              VerticalAlignment="Center" Margin="0,0,10,0"/>
       <TextBlock Text="SPINNY" Foreground="{StaticResource SdGreenBrush}" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
       <TextBlock Text="DISC" Foreground="{StaticResource SdTextBrush}" FontSize="22" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
-      <TextBlock Text="ssd reliability triage" Classes="hint" VerticalAlignment="Center"/>
       <TextBlock Classes="verdict {Binding VerdictCss}" Text="{Binding VerdictText}"
-                 DockPanel.Dock="Right" VerticalAlignment="Center"/>
+                 DockPanel.Dock="Right" VerticalAlignment="Center" Margin="24,0,0,0"
+                 TextAlignment="Right"/>
+      <TextBlock Text="ssd reliability triage" Classes="hint" FontSize="13"
+                 VerticalAlignment="Center"/>
     </DockPanel>
 
     <!-- drive card -->
@@ -95,7 +97,7 @@
                     VerticalAlignment="Center" ToolTip.Tip="gentle: ~25% surface, quick triage · normal: full sweep · heavy: full sweep + sustained random pressure + long idle-wake cycles"/>
           <CheckBox Content="destructive write+verify" IsChecked="{Binding AllowWrites}" Margin="0,0,16,0" VerticalAlignment="Center"
                     ToolTip.Tip="DESTRUCTIVE: writes a pattern to the whole disk and reads it back. Destroys all data. Needed to catch silent corruption."/>
-          <CheckBox Content="allow system disk (override)" IsChecked="{Binding AllowSystemDisk}"
+          <CheckBox Content="allow disk zero (override)" IsChecked="{Binding AllowSystemDisk}"
                     IsEnabled="{Binding AllowWrites}" VerticalAlignment="Center"
                     ToolTip.Tip="Permits write+verify on the disk hosting the boot volume. Dangerous — for Windows To Go test drives only."/>
         </WrapPanel>
@@ -127,8 +129,17 @@
         <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
           <Button Grid.Column="0" Classes="accent" Content="START TEST" Command="{Binding StartCommand}" Width="130"/>
           <Button Grid.Column="1" Content="cancel" Command="{Binding CancelCommand}" Margin="8,0,0,0" IsEnabled="{Binding IsRunning}"/>
-          <ProgressBar Grid.Column="2" Value="{Binding ProgressFraction}" Minimum="0" Maximum="1" Height="32"
-                       VerticalAlignment="Center" Margin="16,0,10,0"/>
+          <Border Grid.Column="2" Height="32" CornerRadius="6" ClipToBounds="True"
+                  Background="{StaticResource SdPanelAltBrush}" BorderBrush="{StaticResource SdBorderBrush}"
+                  BorderThickness="1" VerticalAlignment="Center" Margin="16,0,10,0"
+                  ToolTip.Tip="{Binding ProgressFraction, StringFormat='{}{0:P0}'}">
+            <Border Background="{StaticResource SdGreenBrush}" CornerRadius="4" Margin="3"
+                    RenderTransformOrigin="0,0.5">
+              <Border.RenderTransform>
+                <ScaleTransform ScaleX="{Binding ProgressFraction}"/>
+              </Border.RenderTransform>
+            </Border>
+          </Border>
           <TextBlock Grid.Column="3" Text="{Binding ElapsedText}" VerticalAlignment="Center"
                      FontFamily="Consolas,Menlo,monospace" Foreground="{StaticResource SdTextDimBrush}"
                      Margin="0,0,10,0" MinWidth="56" TextAlignment="Right"

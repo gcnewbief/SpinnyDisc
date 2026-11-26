@@ -210,7 +210,8 @@ internal static unsafe class Pnp
     {
         error = "";
         var devs = PInvoke.SetupDiGetClassDevs(
-            (Guid?)null, null, default, SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_PRESENT);
+            (Guid?)null, null, default,
+            SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_PRESENT | SETUP_DI_GET_CLASS_DEVS_FLAGS.DIGCF_ALLCLASSES);
         if (devs.IsInvalid)
         {
             error = $"SetupDiGetClassDevs failed: {Marshal.GetLastPInvokeErrorMessage()}";
@@ -232,7 +233,7 @@ internal static unsafe class Pnp
                     ClassInstallHeader = new SP_CLASSINSTALL_HEADER
                     {
                         cbSize = (uint)sizeof(SP_CLASSINSTALL_HEADER),
-                        InstallFunction = (DI_FUNCTION)0x3, // DICS_PROPCHANGE
+                        InstallFunction = (DI_FUNCTION)0x12, // DIF_PROPERTYCHANGE
                     },
                     StateChange = (SETUP_DI_STATE_CHANGE)0x2,         // DICS_DISABLE
                     Scope = (SETUP_DI_PROPERTY_CHANGE_SCOPE)0x2,      // DICS_FLAG_CONFIGSPECIFIC
@@ -240,7 +241,7 @@ internal static unsafe class Pnp
                 };
 
                 if (!PInvoke.SetupDiSetClassInstallParams(hraw, &devInfo, (SP_CLASSINSTALL_HEADER*)&hdr, (uint)sizeof(SP_PROPCHANGE_PARAMS)) ||
-                    !PInvoke.SetupDiCallClassInstaller((DI_FUNCTION)0x3, devs, devInfo))
+                    !PInvoke.SetupDiCallClassInstaller((DI_FUNCTION)0x12, devs, devInfo))
                 {
                     error = $"Disable failed: {Marshal.GetLastPInvokeErrorMessage()}";
                     return false;
@@ -250,7 +251,7 @@ internal static unsafe class Pnp
                 hdr.StateChange = (SETUP_DI_STATE_CHANGE)0x1; // DICS_ENABLE
 
                 if (!PInvoke.SetupDiSetClassInstallParams(hraw, &devInfo, (SP_CLASSINSTALL_HEADER*)&hdr, (uint)sizeof(SP_PROPCHANGE_PARAMS)) ||
-                    !PInvoke.SetupDiCallClassInstaller((DI_FUNCTION)0x3, devs, devInfo))
+                    !PInvoke.SetupDiCallClassInstaller((DI_FUNCTION)0x12, devs, devInfo))
                 {
                     error = $"Enable failed: {Marshal.GetLastPInvokeErrorMessage()}";
                     return false;

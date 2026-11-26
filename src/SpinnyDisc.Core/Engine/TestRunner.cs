@@ -405,6 +405,14 @@ public sealed unsafe class TestRunner
 
     private bool ResetAndRetry(IoResult r, string phase)
     {
+        if (_report.Stats.Resets >= _plan.MaxResets)
+        {
+            Emit(EventKind.Aborted, phase, detail: $"reset limit ({_plan.MaxResets}) exceeded");
+            _report.Verdict = Verdict.Failed;
+            _report.VerdictReason = "Exceeded reset budget — drive condemned";
+            _abort = true;
+            return false;
+        }
         _report.Stats.Resets++;
         Emit(EventKind.ResetAttempt, phase, r.Offset, r.Length, detail: $"reset #{_report.Stats.Resets}");
 
