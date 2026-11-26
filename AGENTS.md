@@ -53,3 +53,44 @@ Output redirected by PowerShell `*>` is UTF-16 — read with `iconv -f UTF-16LE`
 - SMART over USB is bridge-lottery (RTL9210 = unavailable in usermode).
 - QD1 I/O only; a queue-depth stress phase would pressure firmware harder.
 - SATA AHCI port reset has no clean usermode path — falls back to devnode restart.
+- DiskEnumerator itself can block on a truly wedged device (Windows' Get-Disk
+  hangs too). WaitForReturnAsync bounds its probes; initial enumerate doesn't —
+  possible future fix is per-disk probe isolation with abandon-on-timeout.
+
+## Session notes — 2026-11-26 (sign-off)
+
+### Field results — broken 1 TB drive in ANYOYO EC-SP02 / RTL9210 (VID_0BDA&PID_9210)
+- Drive hung on first/early sweep reads repeatedly (~every 1-8 MiB). Hang watchdog
+  (15s) fired reliably; devnode restart brought it back in ~60-100s; post-reset
+  probe of the hung offset SUCCEEDED both times → transient state hangs, not
+  mapped dead regions.
+- At reset #4 the devnode vanished mid-reset (self-eject, 0xE000020B) and the
+  drive NEVER came back — bridge now sits disabled/error in PnP. Needs physical
+  replug. Enable-PnpDevice on the tombstone doesn't revive it.
+- Verdict on that run: Failed — "Hung and could not be reset" (correct call;
+  with the self-eject fix it would've been "Lost after reset").
+- Takeaway for tuning: this drive hung roughly every 1-8 MiB. A full sweep is
+  pointless on it — hang-limit abort is the designed outcome. Consider a
+  "hang-rate" early-verdict (e.g. N hangs in first X MiB → early FAILED) to
+  save 30+ min per brick.
+
+### Repo / release
+- Repo: https://github.com/gcnewbief/SpinnyDisc (renamed from spinnydisc —
+  origin URL updated; old URL redirects).
+- gh token is a fine-grained PAT — repo CREATION is denied; pushes/releases
+  work only after the repo is added to the token's scope.
+- v0.1.0 released 2026-11-26 with SpinnyDisc.exe + SpinnyDisc.Cli.exe assets.
+- Rebase gotcha: `git rebase` without -c identity stalls mid-pick leaving an
+  interactive-rebase state with staged changes — commit manually then
+  `git rebase --quit && git branch -f main HEAD && git checkout main`.
+
+### GUI state (all live in publish/win-x64/SpinnyDisc.exe)
+- VoltCheck dark-green theme, mascot icon (exe + window + header), card layout.
+- NumericUpDown: decimal bindings + ShowButtonSpinner=False (spinners ate text).
+- Progress bar is a custom Border track+fill (32px ≈ ¼ of Start button height)
+  because Fluent2 ProgressBar ignores Height.
+- Intensity ComboBox (gentle/normal/heavy) drives SweepStride + idle params +
+  seeds the RandomReadOps box.
+- Tooltips on all options; elapsed mm:ss in run row; log pane clipped + scrolls
+  horizontally; output path ellipsizes.
+
